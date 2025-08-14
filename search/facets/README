@@ -1,0 +1,136 @@
+Create a Search Query to Group Results Using Facets
+In this lab, you'll use an aggregation pipeline with the $searchMeta stage and the facet collector to find movies released within a certain timeframe, group them by language, and then get a count for each group.
+
+To do this, you will use the movies collection and the language_facet_idx search index that you created in the previous lab. Let's get started!
+
+Lab Instructions
+Go to the editor tab and open the /lab/faceted_search_pipeline.js file. This file contains a variable with a partially completed aggregation pipeline. Complete the pipeline to use the $searchMeta stage and the language_facet_idx index. The pipeline should meet the following requirements:
+
+It uses the $searchMeta stage.
+
+It uses the language_facet_idx index.
+
+It includes a range search for the released field.
+
+It includes a facet called languageFacet.
+
+Important
+Before moving on to the next step, be sure to save your edited file /lab/faceted_search_pipeline.js.
+
+Navigate to the mongosh tab at the top of the screen and run the following command to create the search index:
+
+javascript
+
+copy
+
+run
+load('/lab/faceted_search_pipeline.js')
+In the mongosh tab, run the following command to execute the aggregation pipeline:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate(facetedSearchPipeline)
+The output should look like this:
+
+javascript
+[
+  {
+    count: { lowerBound: Long('57') },
+    facet: {
+      languageFacet: {
+        buckets: [
+          { _id: 'English', count: Long('41') },
+          { _id: 'Korean', count: Long('7') },
+          { _id: 'French', count: Long('4') },
+          { _id: 'Japanese', count: Long('4') },
+          { _id: 'German', count: Long('3') },
+          { _id: 'Polish', count: Long('2') },
+          { _id: 'Spanish', count: Long('2') },
+          { _id: 'Afrikaans', count: Long('1') },
+          { _id: 'American Sign Language', count: Long('1') },
+          { _id: 'Cantonese', count: Long('1') }
+        ]
+      }
+    }
+  }
+]
+Once you have completed the lab, select the Check button.
+
+
+💡 Hints
+
+🏁 Review and Solved Code
+In the editor tab, we edited the /lab/faceted_search_pipeline.js file to include the aggregation pipeline:
+
+javascript
+
+copy
+const facetedSearchPipeline = [{
+    "$searchMeta": {
+        "index": "language_facet_idx",
+        "facet": {
+            "operator": {
+                "range": {
+                    "path": "released",
+                    "gte": ISODate("2000-01-01T00:00:00.000Z"),
+                    "lte": ISODate("2000-01-31T00:00:00.000Z")
+                },
+            },
+            "facets": {
+                "languageFacet": {
+                    "type": "string",
+                    "path": "languages"
+                }
+            }
+        }
+    }
+}]
+In the mongosh tab, we ran the following command to load the aggregation pipeline into mongosh:
+
+javascript
+
+copy
+
+run
+load('/lab/faceted_search_pipeline.js')
+In the mongosh tab, we ran the aggregation pipeline to group and count movies based on the specified fields:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate(facetedSearchPipeline)
+✅ Solved Code
+From the mongosh tab, run the following commands:
+
+javascript
+
+copy
+
+run
+const facetedSearchPipeline = [{
+    "$searchMeta": {
+        "index": "language_facet_idx",
+        "facet": {
+            "operator": {
+                "range": {
+                    "path": "released",
+                    "gte": ISODate("2000-01-01T00:00:00.000Z"),
+                    "lte": ISODate("2000-01-31T00:00:00.000Z")
+                },
+            },
+            "facets": {
+                "languageFacet": {
+                    "type": "string",
+                    "path": "languages"
+                }
+            }
+        }
+      }
+}]
+
+db.movies.aggregate(facetedSearchPipeline)
