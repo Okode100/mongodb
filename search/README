@@ -1,0 +1,279 @@
+Logo
+Dynamic vs Static Mappings
+Overview
+
+Progress
+
+Hide Instructions
+5m
+Refresh tab
+
+View notes
+
+📥 Instructions
+Create an Atlas Search Index With Dynamic Mapping
+In this lab, you'll use the Atlas CLI to create a dynamic Atlas Search index for the movies collection. You'll start with the static index on the title and plot fields, then create a new dynamic index to broaden search capabilities. Let's get started!
+
+Lab Instructions
+In the terminal tab, check that the plot_title_idx search index still exists by running the following command:
+
+bash
+
+copy
+
+run
+atlas deployments search indexes list \
+  --deploymentName myLocalRs1 \
+  --db sample_mflix \
+  --collection movies \
+  --output=json \
+  --type LOCAL
+Switch to the mongosh tab and run the following query to find movies with Tom Hanks in the cast using the plot_title_idx index. Notice that this query returns no results since we didn't index the cast field:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([
+  {
+    $search: {
+      index: "plot_title_idx",
+      text: {
+        query: "Tom Hanks",
+        path: "cast",
+      },
+    },
+  },
+]);
+In the editor tab, use the dynamic_search_index.json file to define a new dynamic search index by adding a mappings object with the relevant fields.
+
+Note
+Need help with the syntax? See the 💡Hints section below.
+
+In the terminal, create the search index by running the following command:
+
+bash
+
+copy
+
+run
+atlas deployments search indexes create --deploymentName myLocalRs1 --type LOCAL -f /lab/dynamic_search_index.json --watch
+In the terminal, get the status of the movies_dynamic index by running the following command. Search indexes can take a minute to build, so please verify the status is READY before advancing:
+
+bash
+
+copy
+
+run
+atlas deployments search indexes list \
+  --deploymentName myLocalRs1 \
+  --db sample_mflix \
+  --collection movies \
+  --output=json \
+  --type LOCAL \
+  | jq --arg INDEX_NAME "movies_dynamic" '.[] | select(.Name == $INDEX_NAME) .Status'
+In mongosh, run a query to search for Tom Hanks in the cast field using the dynamic search index:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([
+  {
+    $search: {
+      index: "movies_dynamic",
+      text: {
+        query: "Tom Hanks",
+        path: "cast",
+      },
+    },
+  },
+  { $project: { title: 1, plot: 1, cast: 1, _id: 0 } },
+  { $limit: 5 },
+])
+You should receive documents for 5 movies that list Tom Hanks as a cast member.
+
+Once you have completed the lab, select the Check button.
+
+
+💡 Hints
+
+🏁 Review and Solved Code
+First, in the terminal, you ran a command to ensure that the plot_title_idx search index still exists, and is ready to use.
+
+bash
+
+copy
+
+run
+atlas deployments search indexes list \
+  --deploymentName myLocalRs1 \
+  --db sample_mflix \
+  --collection movies \
+  --type LOCAL
+This command returned the following output, indicating that the plot_title_idx search index was ready to use:
+
+bash
+ID                         NAME                      DATABASE       COLLECTION   STATUS   TYPE
+   plot_title_idx            sample_mflix   movies       READY    search
+Next, in mongosh, you searched for Tom Hanks in the cast field, but nothing was returned because the cast field was not indexed.
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([
+  {
+    $search: {
+      index: "689d0b1c86c7c359c27929da",
+      text: {
+        query: "Tom Hanks",
+        path: "cast",
+      },
+    },
+  },
+  { $project: { title: 1, plot: 1, cast: 1, _id: 0 } },
+  { $limit: 5 },
+])
+Next, in the editor, you fixed this issue by creating a dynamic search index. In the mappings field, you set dynamic to true.
+
+json
+
+copy
+{
+  "name": "movies_dynamic",
+  "collectionName": "movies",
+  "database": "sample_mflix",
+  "definition":{
+    "searchAnalyzer": "lucene.standard",
+    "analyzer": "lucene.standard",
+    "mappings": {
+      "dynamic": true
+    }
+  }
+}
+In the terminal, you created the movies_dynamic search index, stored within the dynamic_search_index.json file, by running the following command:
+
+bash
+
+copy
+
+run
+ atlas deployments search indexes create --deploymentName myLocalRs1 --type LOCAL -f /lab/dynamic_search_index.json --watch
+In the terminal, you checked the status of the movies_dynamic index, to make sure it was was READY before proceeding to the next step.
+
+bash
+
+copy
+
+run
+atlas deployments search indexes list \
+  --deploymentName myLocalRs1 \
+  --db sample_mflix \
+  --collection movies \
+  --output=json \
+  --type LOCAL \
+  | jq --arg INDEX_NAME "movies_dynamic" '.[] | select(.Name == $INDEX_NAME) .Status'
+In mongosh, you searched for Tom Hanks in the cast field, with a query that used the movies_dynamic search index, and received 5 results.
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([
+  {
+    $search: {
+      index: "movies_dynamic",
+      text: {
+        query: "Tom Hanks",
+        path: "cast",
+      },
+    },
+  },
+  { $project: { title: 1, plot: 1, cast: 1, _id: 0 } },
+  { $limit: 5 },
+])
+This command should return the following documents:
+
+javascript
+[
+  {
+    plot: 'Following the Normandy Landings, a group of U.S. soldiers go behind enemy lines to retrieve a paratrooper whose brothers have been killed in action.',
+    title: 'Saving Private Ryan',
+    cast: [ 'Tom Hanks', 'Tom Sizemore', 'Edward Burns', 'Barry Pepper' ]
+  },
+  {
+    plot: 'Two sisters join the first female professional baseball league and struggle to help it succeed amidst their own growing rivalry.',
+    title: 'A League of Their Own',
+    cast: [ 'Tom Hanks', 'Geena Davis', 'Lori Petty', 'Madonna' ]
+  },
+  {
+    plot: 'An overstressed suburbanite and his paramilitaric neighbor struggle to prove their paranoid theory that the new family in town is a front for a cannibalistic cult.',
+    cast: [ 'Tom Hanks', 'Bruce Dern', 'Carrie Fisher', 'Rick Ducommun' ],
+    title: "The 'Burbs"
+  },
+  {
+    plot: 'After his mistress runs over a young teen, a Wall Street hotshot sees his life unravel in the spotlight, and attracting the interest of a down and out reporter.',
+    cast: [ 'Tom Hanks', 'Bruce Willis', 'Melanie Griffith', 'Kim Cattrall' ],
+    title: 'The Bonfire of the Vanities'
+  },
+  {
+    plot: 'When Woody is stolen by a toy collector, Buzz and his friends vow to rescue him, but Woody finds the idea of immortality in a museum tempting.',
+    title: 'Toy Story 2',
+    cast: [ 'Tom Hanks', 'Tim Allen', 'Joan Cusack', 'Kelsey Grammer' ]
+  }
+]
+✅ Solved Code
+In the editor tab:
+
+json
+
+copy
+{
+  "name": "movies_dynamic",
+  "collectionName": "movies",
+  "database": "sample_mflix",
+  "definition":{
+    "searchAnalyzer": "lucene.standard",
+    "analyzer": "lucene.standard",
+    "mappings": {
+      "dynamic": true
+    }
+  }
+}
+In the terminal tab:
+
+bash
+
+copy
+
+run
+atlas deployments search indexes create --deploymentName myLocalRs1 --type LOCAL -f /lab/dynamic_search_index.json --watch
+In the mongosh tab:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([
+  {
+    $search: {
+      index: "movies_dynamic",
+      text: {
+        query: "Tom Hanks",
+        path: "cast",
+      },
+    },
+  },
+  { $project: { title: 1, plot: 1, cast: 1, _id: 0 } },
+  { $limit: 5 },
+])
+
+👨‍💻 Troubleshooting
+
+Check
