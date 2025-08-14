@@ -1,0 +1,164 @@
+Fine-Tune Search Results with the range Operator
+In this lab, you will use the range operator to search for movies released during a specific date range in our movies collection.
+
+For this lab, you will continue to use the released_index, a static index on the released field with a type of date.
+
+Important
+An Atlas Search index named released_index has been created for you.
+
+Lab Instructions
+In the editor tab, open the query.js file, which contains a variables for a query to search for movies released between 1987-01-01 and less than 1990-01-01. Fill in the searchStage variable by doing the following:
+
+Specify the index to use for this query, which is released_index.
+
+Use the range operator, and the gt and lt operators to find movies released between 1987-01-01 and less than 1990-01-01.
+
+Note
+For help with the syntax, check the 💡Hints section.
+
+After updating the searchStage variable, use the following command in the mongosh tab to load the variables into mongosh:
+
+javascript
+
+copy
+
+run
+load('/lab/query.js')
+Note
+To view the current contents of the searchStage variable, type searchStage in the mongosh tab.
+
+Once you are happy with the searchStage, run the query in the mongosh tab to find movies released during the specified date range:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([searchStage, projectStage, limitStage])
+Once you have completed the lab, select the Check button.
+
+
+💡 Hints
+The range operator can be used to perform a search over fields containing numbers, dates, or strings. Here's the syntax:
+
+javascript
+
+copy
+{
+  "$search": {
+    "index": <index name>, // optional, defaults to "default"
+    "range": {
+        "path": "<field-to-search>",
+        "gt | gte": <value-to-search>,
+        "lt | lte": <value-to-search>,
+        "score": <score-options>
+    }
+  }
+}
+pathis the field to search.
+gt or gteis used for the lower bound of the range. Use gt for exclusive range and gte for inclusive range.
+lt or lte is used for the upper bound of the range. Use lt for exclusive range and lte for inclusive range.
+score is optional and not required for this lab.
+To view the released_index definition again, use the atlas deployments search indexes list command in the terminal tab:
+
+bash
+
+copy
+atlas deployments search indexes list \
+--deploymentName myLocalRs1 \
+--db sample_mflix \
+--collection movies \
+--output=json
+
+🏁 Review and Solved Code
+We updated the searchStage variable in the query.js file, located in the editor tab, by doing the following:
+
+Specifying the index as released_index.
+Adding a range operator object with:
+A path field of released
+A gt value of 1987-01-01 (greater than January 1, 1987)
+A lt value of 1990-01-01 (less than January 1, 1990)
+javascript
+
+copy
+const searchStage = {
+  $search: {
+    index: "released_index",
+    range: {
+      path: "released",
+      gt: new Date("1987-01-01"),
+      lt: new Date("1990-01-01"),
+    },
+  },
+};
+We loaded the variables into mongosh by using the load('/lab/query.js') command in the mongosh tab:
+
+javascript
+
+copy
+
+run
+load('/lab/query.js')
+Finally, we ran the query in the mongosh tab to find movies released between January 1, 1987, and January 1, 1990:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([searchStage, projectStage, limitStage])
+This query should have returned output similar to the following:
+
+Important
+Note that because most of the returned documents have the same score, the order of the documents may vary.
+
+javascript
+[
+  {
+    title: 'Kobieta samotna',
+    released: ISODate('1987-09-30T00:00:00.000Z'),
+    score: 1
+  },
+  {
+    title: 'Interrogation',
+    released: ISODate('1989-12-13T00:00:00.000Z'),
+    score: 1
+  },
+  {
+    title: 'Balkan Spy',
+    released: ISODate('1987-10-08T00:00:00.000Z'),
+    score: 1
+  },
+  // ...
+]
+✅ Solved Code
+To solve the challenge, run the following in the mongosh tab:
+
+javascript
+
+copy
+
+run
+const searchStage = {
+  $search: {
+    index: "released_index",
+    range: {
+      path: "released",
+      gt: new Date("1987-01-01"),
+      lt: new Date("1990-01-01"),
+    },
+  },
+};
+
+const projectStage = {
+  $project: {
+    _id: 0,
+    title: 1,
+    released: 1,
+    score: { $meta: "searchScore" },
+  },
+};
+
+const limitStage = { $limit: 10 };
+
+db.movies.aggregate([searchStage, projectStage, limitStage]);

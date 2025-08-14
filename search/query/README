@@ -1,0 +1,154 @@
+Use the near Operator to Find Movies
+In this lab, you'll use the near operator to search for movies in the movies collection that were released around a particular date.
+
+Important
+An Atlas Search index named released_index has been created for you.
+
+Note
+Please note that this lab is using a Local Atlas Deployment. Visit our documentation page to learn more!
+
+Lab Instructions
+In the editor tab, open the query.js file, which contains a query to search for movies released near a specific date. Update the searchStage variable by doing the following:
+
+Specify the index to use for this query, which is released_index
+
+Use the near operator to find movies released within 30 days of the target date, 1984-06-08
+
+Note
+For help with the syntax, check the 💡Hints section.
+
+In the mongosh tab, use the following command to load the variables into mongosh:
+
+javascript
+
+copy
+
+run
+load('/lab/query.js')
+Note
+You can view the current contents of the searchStage variable by running searchStage in the mongosh tab.
+
+In the mongosh tab, run the query to find movies released within 30 days of the target date, 1984-06-08:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([searchStage, projectStage, limitStage])
+Once you have completed the lab, select the Check button.
+
+
+💡 Hints
+The near operator is used to find documents with a value in close proximity to a target value. Here's the syntax:
+
+json
+
+copy
+{
+  "near": {
+    "path": "field_name",
+    "origin": "target_value",
+    "pivot": "range"
+  }
+}
+path is the field to search for values near the target value.
+origin is the target value to search for. When the target value is a date, use the new Date("YYYY-MM-DD") constructor in mongosh to specify the date.
+pivot is the range of values to search for near the target value. When working with dates, this should be a number in milliseconds.
+30 days in milliseconds is equal to 2592000000.
+
+
+🏁 Review and Solved Code
+First, we updated the searchStage variable in the query.js file located in the editor tab by doing the following:
+
+Specifying the index as released_index
+Adding a near operator object with the following information:
+The path as released to search for movies released near the target date
+The origin as new Date("1984-06-08") to specify the target date
+The pivot as 2592000000 (30 days in milliseconds)
+javascript
+
+copy
+const searchStage = {
+  $search: {
+    index: "released_index",
+    near: {
+      path: "released",
+      origin: new Date("1984-06-08"),
+      pivot: 2592000000,
+    },
+  },
+};
+Next, we loaded the variables into mongosh by using the load('/lab/query.js') command in the mongosh tab.
+
+javascript
+
+copy
+
+run
+load('/lab/query.js')
+Finally, we ran the aggregation query in the mongosh tab to find movies released within 30 days of the target date 1984-06-08:
+
+javascript
+
+copy
+
+run
+db.movies.aggregate([searchStage, projectStage, limitStage])
+This query returns output similar to the following:
+
+javascript
+[
+  {
+    title: 'Ghostbusters',
+    released: ISODate('1984-06-08T00:00:00.000Z'),
+    score: 1
+  },
+  {
+    title: 'Gremlins',
+    released: ISODate('1984-06-08T00:00:00.000Z'),
+    score: 1
+  },
+  {
+    title: 'Le Dernier Combat (The Last Battle)',
+    released: ISODate('1984-06-12T00:00:00.000Z'),
+    score: 0.8823529481887817
+  },
+  {
+    title: 'Under the Volcano',
+    released: ISODate('1984-06-13T00:00:00.000Z'),
+    score: 0.8571428656578064
+  },
+  // ...
+]
+✅ Solved Code
+To solve the challenge, run the following in the mongosh tab:
+
+javascript
+
+copy
+
+run
+const searchStage = {
+  $search: {
+    index: "released_index",
+    near: {
+      path: "released",
+      origin: new Date("1984-06-08"),
+      pivot: 2592000000,
+    },
+  },
+};
+
+const projectStage = {
+  $project: {
+    _id: 0,
+    title: 1,
+    released: 1,
+    score: { $meta: "searchScore" },
+  },
+};
+
+const limitStage = { $limit: 10 };
+
+db.movies.aggregate([searchStage, projectS
